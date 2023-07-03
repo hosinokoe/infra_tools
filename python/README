@@ -1,0 +1,24 @@
+ec2_info_new():
+{
+  profile : [[os_type, ec2_type, account_id]],
+}
+example: {'noprod': [['Red Hat Enterprise Linux', 't3a.large', '411759363082'], ['Red Hat Enterprise Linux', 't3a.xlarge', '411759363082']],  'infra': [['Red Hat Enterprise Linux', 't3a.2xlarge', '247451563658'], ['Windows', 't3a.xlarge', '247451563658'], ['Red Hat Enterprise Linux', 't3a.large', '247451563658']]}
+
+ec2_count_new():
+{
+  profile : [[os_type, ec2_type, account_id, instance_number]],
+}
+exapmple: {'noprod': [['Linux/UNIX', 't3a.large', '411759363082', 21], ['Linux/UNIX', 't3a.xlarge', '411759363082', 14], ['Linux/UNIX', 't3.large', '411759363082', 1]], 'prod': [['Linux/UNIX', 't3a.large', '411826711355', 17], ['Linux/UNIX', 't3a.xlarge', '411826711355', 20]], 'drms': [['Linux/UNIX', 'm5.2xlarge', '238346814458', 4]], 'infra': [['Linux/UNIX', 't2.large', '247451563658', 1]]}
+
+data_split():
+{
+  profile : [[os_type, ec2_type, instance_number]],
+}
+example: {'noprod': [['Linux/UNIX', 't3a.large', 21], ['Linux/UNIX', 't3a.xlarge', 14]], 'prod': [['Linux/UNIX', 't3a.large', 17], ['Linux/UNIX', 't3a.xlarge', 20]], 'drms': [['Linux/UNIX', 'm5.2xlarge', 4]], 'infra': []}
+
+ec2_split():
+跟data_split()结果一致，将可变ec2统一改为基础类型
+
+ec2_merge():
+defaultdict(int): ({(os_type,ec2_type): instance_number})
+example: defaultdict(<class 'int'>, {('Red Hat Enterprise Linux', 't3a.large'): 5, ('Red Hat Enterprise Linux', 't3a.xlarge'): 1, ('Windows', 't3a.large'): 3})
