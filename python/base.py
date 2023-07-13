@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-import boto3, collections
+import boto3, collections, datetime
+from dateutil.tz import tzutc
 import pandas as pd
 import openpyxl as opx
 
@@ -45,6 +46,7 @@ def instance_count_new(mylist, profile):
         if j == i:
           j.append(c_count)
     new_count[p] = newlist
+  # print(new_count)
   return new_count
 
 # 删除ec2实例中不符合要求的实例
@@ -57,6 +59,7 @@ def data_split(data, profile, ec2_type):
 
 # 修改可变实例为基础实例
 def instance_split(data, profile, origin, order):
+  # print(data)
   for p in profile:
     for i in data[p]:
       i[order] *= origin[i[1]][1]
@@ -72,8 +75,7 @@ def instance_merge(data):
   #     b.append(i)
   for j in b:
     tmp[','.join(map(str,j[:-1]))]+=j[-1]
-  # for j,k,l in b:
-  #   tmp[j,k] += l
+  # print(tmp)
   return tmp
 
 # 输出excel表格
@@ -82,7 +84,48 @@ def to_excel_new(data, file, sheet_name, columns, mode = 'a'):
   df=pd.DataFrame([k.split(',')+[v] for k,v in data.items()],columns=columns)
   with pd.ExcelWriter(file, mode=mode) as writer:
     df.to_excel(writer, sheet_name=sheet_name)
-        
+
+def ri_ec2():
+  RI_now = datetime.datetime.now(tzutc())
+  ec2_RI = []
+  session = boto3.Session(profile_name = '9913')
+  ec2 = session.client('ec2')
+  response = ec2.describe_reserved_instances(Filters=[{'Name': 'state', 'Values': ['active']}])
+  for i in response['ReservedInstances']:
+    if i['End'] - RI_now > datetime.timedelta(days=15):
+      ec2_RI.append([i['ProductDescription'],i['InstanceType'],i['InstanceCount']])
+  return(ec2_RI)
+
+def ri_rds():
+  RI_now = datetime.datetime.now(tzutc())
+  rds_RI = []
+  session = boto3.Session(profile_name = '9913')
+  ec2 = session.client('rds')
+  response = ec2.describe_reserved_db_instances()
+  for i in response['ReservedDBInstances']:
+    if i['ProductDescription'] == 'postgresql':
+      i['ProductDescription'] = 'postgres'
+    if i['State'] == 'active' and RI_now - i['StartTime'] < datetime.timedelta(days=350):
+      rds_RI.append([i['ProductDescription'],i['DBInstanceClass'],i['MultiAZ'],i['DBInstanceCount']])
+  return(rds_RI)
+
+def ri_merge(data):
+  tmp = collections.defaultdict(int)
+  for j in data:
+    tmp[','.join(map(str,j[:-1]))]+=j[-1]
+  # print(tmp)
+  return tmp
+
+def ri_buy(ri, *args):
+  tmp = collections.defaultdict(int)
+  for i in args:
+    tmp.update(i)
+  ri_tobuy = collections.defaultdict(int, {k: tmp[k] - ri[k] for k in tmp})
+  # print('ri_tobuy:', ri_tobuy)
+  return ri_tobuy
+
+
+
 # 返回所有账号的rds服务器的元信息，删除oracle信息
 def rds_info_new(profile):
   rds_info = {}
@@ -96,3 +139,62 @@ def rds_info_new(profile):
         rds_origin.append([i["Engine"], i["DBInstanceClass"], i["MultiAZ"]])
         rds_info[p] = rds_origin
   return rds_info
+
+# 返回所有账号的elasticache服务器的元信息
+def redis_info(profile):
+  redis_info = {}
+  for p in profile:
+    redis_origin = []
+    session = boto3.Session(profile_name = p)
+    redis = session.client('elasticache')
+    response = redis.describe_cache_clusters()
+    for i in response['CacheClusters']:
+      redis_origin.append([i['CacheNodeType'], i['NumCacheNodes']])
+      redis_info[p] = redis_origin
+  return redis_info
+
+# 返回所有elasticache目前的RI信息
+def ri_redis():
+  RI_now = datetime.datetime.now(tzutc())
+  redis_RI = []
+  session = boto3.Session(profile_name = '9913')
+  redis = session.client('elasticache')
+  response = redis.describe_reserved_cache_nodes()
+  for i in response['ReservedCacheNodes']:
+    if i['State'] == 'active' and RI_now - i['StartTime'] < datetime.timedelta(days=350):
+      redis_RI.append([i['CacheNodeType'],i['CacheNodeCount']])
+  return(redis_RI)
+
+# 返回所有账号的opensearch服务器的元信息
+def opensearch_info(profile):
+  opensearch_info, tmp = {}, {}
+  for p in profile:
+    opensearch_name = []
+    session = boto3.Session(profile_name = p)
+    opensearch = session.client('opensearch')
+    response = opensearch.list_domain_names()
+    for i in response['DomainNames']:
+      opensearch_name.append([i['DomainName']])
+      tmp[p] = opensearch_name
+  for k,v in tmp.items():
+    for i in v:
+      es_name = []
+      session = boto3.Session(profile_name = k)
+      opensearch = session.client('opensearch')
+      response = opensearch.describe_domain_config(DomainName=i[0])
+      item = response['DomainConfig']['ClusterConfig']['Options']
+      es_name.append([item['InstanceType'], item['InstanceCount']])
+      opensearch_info[k] = es_name
+  return opensearch_info
+
+# 返回所有opensearch目前的RI信息
+def ri_es():
+  RI_now = datetime.datetime.now(tzutc())
+  es_RI = []
+  session = boto3.Session(profile_name = '9913')
+  es = session.client('opensearch')
+  response = es.describe_reserved_instances()
+  for i in response['ReservedInstances']:
+    if i['State'] == 'active' and RI_now - i['StartTime'] < datetime.timedelta(days=350):
+      es_RI.append([i['InstanceType'],i['InstanceCount']])
+  return(es_RI)

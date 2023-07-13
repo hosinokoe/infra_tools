@@ -1,3 +1,6 @@
+流程：
+# 元信息获取-> 单独账号统计 -> 信息裁剪 -> 基础实例转换 -> 账号合并统计
+
 ec2_info_new():
 {
   profile : [[os_type, ec2_type, account_id]],
@@ -22,3 +25,34 @@ ec2_split():
 ec2_merge():
 defaultdict(int): ({(os_type,ec2_type): instance_number})
 example: defaultdict(<class 'int'>, {('Red Hat Enterprise Linux', 't3a.large'): 5, ('Red Hat Enterprise Linux', 't3a.xlarge'): 1, ('Windows', 't3a.large'): 3})
+
+ri_buy():
+购买逻辑：
+1. 首先拿到所有instance信息
+2. 拿到所有RI信息
+3. 将12的信息做处理得到需要购买的信息
+
+python3组件说明
+boto3
+拿到aws实例基础信息
+
+collections
+作为主要中间数据结构，数据输出到excel表格
+
+datetime
+作为RDS实例信息的时间组件
+
+dateutil.tz
+作为RDS实例信息的时间组件
+
+pandas
+作为excel输出的数据结构组件
+
+openpyxl
+作为excel输出的组件
+
+configparser
+读取config的组件
+
+argparse
+作为传参组件
