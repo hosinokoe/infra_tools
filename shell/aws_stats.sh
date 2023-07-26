@@ -34,7 +34,7 @@ ec2_sort_new() {
 ec2_ri() {
   echo 9913 ec2_ri
   origin=`aws --profile 9913 ec2 describe-reserved-instances`
-  echo -e $origin | jq -r '.[][]|select(.State=="active")|[.InstanceType,.InstanceCount,.ProductDescription,(.End|split("+")[0]+ "Z"|fromdate|strflocaltime("%Y-%m-%dT%H:%M:%S %Z"))]|@tsv'|sort -k3
+  echo -e $origin |TZ=Asia/Shanghai jq -r '.[][]|select(.State=="active")|[.InstanceType,.InstanceCount,.ProductDescription,(.End|split("+")[0]+ "Z"|fromdate|strflocaltime("%Y-%m-%dT%H:%M:%S %Z"))]|@tsv'|sort -k3
 }
 
 rds_sort() {
