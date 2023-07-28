@@ -79,10 +79,18 @@ redis_count_auto_version_update() {
   done
 }
 
+ri_coverage() {
+  echo 9913 ri_coverage
+  Start=`date +%Y-%m-%d -d '-2day'`
+  End=`date +%Y-%m-%d -d '-1day'`
+  origin=`aws --profile 9913 ce get-reservation-coverage --time-period Start=$Start,End=$End`
+  echo $origin|jq '.CoveragesByTime[]'
+}
+
 echo "Enter your choice ==> "
 echo "What do you do?"
 
-select answer in ec2 ec2_ri rds rds_count_update rds_ri elasticache elasticache_count_update count_update;do
+select answer in ec2 ec2_ri rds rds_count_update rds_ri elasticache elasticache_count_update count_update ri_coverage;do
 case $answer in
   ec2)
     ec2_sort_new $@;;
@@ -101,6 +109,8 @@ case $answer in
   count_update)
     rds_count_auto_version_update $@
     redis_count_auto_version_update $@;;
+  ri_coverage)
+    ri_coverage;;
   none)
     break;;
   *)
