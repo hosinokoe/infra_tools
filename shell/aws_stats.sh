@@ -58,16 +58,22 @@ rds_count_auto_version_update() {
 rds_ri() {
   echo 9913 rds_ri
   origin=`aws --profile 9913 rds describe-reserved-db-instances`
-  echo -e $origin |TZ=Asia/Shanghai jq -r '.[][]|select(.State=="active")|[.DBInstanceClass,.DBInstanceCount,.ProductDescription,.MultiAZ,(.StartTime|split(".")[0]+ "Z"|fromdate + (60*60*24*365*2)| strflocaltime("%Y-%m-%dT%H:%M:%S %Z"))]|@tsv'|sort -k3
+  echo -e $origin |TZ=Asia/Shanghai jq -r '.[][]|select(.State=="active")|[(.StartTime|split(".")[0]+ "Z"|fromdate + (60*60*24*365)| strflocaltime("%Y-%m-%dT%H:%M:%S %Z")),.DBInstanceClass,.MultiAZ,.ProductDescription]|@tsv'|sort -k1
 }
 
-elasticache_sort() {
+redis_sort() {
   for i in $@;do
     echo $i elasticache
     origin=`redis_cli $i`
     echo $origin | jq -r '.[][]|[.CacheNodeType, .NumCacheNodes]|@tsv'|sort -k1 | uniq -c
     echo -e "\n"
   done
+}
+
+redis_ri() {
+  echo 9913 redis_ri
+  origin=`aws --profile 9913 elasticache describe-reserved-cache-nodes`
+  echo -e $origin | TZ=Asia/Shanghai jq -r '.[][]|[(.StartTime|split(".")[0]+ "Z"|fromdate+ (60*60*24*365)|strflocaltime("%Y-%m-%dT%H:%M:%S %Z")),.CacheNodeCount,.CacheNodeType]|@tsv'
 }
 
 redis_count_auto_version_update() {
@@ -90,7 +96,7 @@ ri_coverage() {
 echo "Enter your choice ==> "
 echo "What do you do?"
 
-select answer in ec2 ec2_ri rds rds_count_update rds_ri elasticache elasticache_count_update count_update ri_coverage;do
+select answer in ec2 ec2_ri rds rds_ri rds_count_update redis_sort redis_ri redis_count_update count_update ri_coverage;do
 case $answer in
   ec2)
     ec2_sort_new $@;;
@@ -102,9 +108,11 @@ case $answer in
     rds_ri;;
   rds_count_update)
     rds_count_auto_version_update $@;;
-  elasticache)
-    elasticache_sort $@;;
-  elasticache_count_update)
+  redis_sort)
+    redis_sort $@;;
+  redis_ri)
+    redis_ri;;
+  redis_count_update)
     redis_count_auto_version_update $@;;
   count_update)
     rds_count_auto_version_update $@
@@ -116,6 +124,6 @@ case $answer in
   *)
     ec2_sort_new $@
     rds_sort $@
-    elasticache_sort $@;;
+    redis_sort $@;;
 esac;done
   
