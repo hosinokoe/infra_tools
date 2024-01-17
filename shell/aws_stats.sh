@@ -31,7 +31,7 @@ account_org() {
 }
 
 ec2_sort_new() {
-  for i in $@;do
+  for i in "$@";do
     echo $i ec2
     origin=`ec2_cli $i`
     echo $origin | jq -r '.[][]|.Instances[]|[.InstanceType, .PlatformDetails]|@tsv' |sort -k2|uniq -c
@@ -46,7 +46,7 @@ ec2_ri() {
 }
 
 rds_sort() {
-  for i in $@;do
+  for i in "$@";do
     echo $i rds
     origin=`rds_cli $i`
     echo $origin | jq -r '.DBInstances[]|[.DBInstanceClass, .MultiAZ, .Engine]|@tsv'|sort -k1 -k3|uniq -c
@@ -55,7 +55,7 @@ rds_sort() {
 }
 
 rds_count_auto_version_update() {
-  for i in $@;do
+  for i in "$@";do
     echo $i "rds auto_version_update"
     origin=`rds_cli $i`
     echo $origin | jq '.[][]|select(.AutoMinorVersionUpgrade==true)|[.DBInstanceIdentifier]|@tsv'|awk -F\- '{print$3}'|tr a-z A-Z|uniq
@@ -70,7 +70,7 @@ rds_ri() {
 }
 
 redis_sort() {
-  for i in $@;do
+  for i in "$@";do
     echo $i elasticache
     origin=`redis_cli $i`
     echo $origin | jq -r '.[][]|[.CacheNodeType, .NumCacheNodes]|@tsv'|sort -k1 | uniq -c
@@ -85,7 +85,7 @@ redis_ri() {
 }
 
 redis_count_auto_version_update() {
-  for i in $@;do
+  for i in "$@";do
     echo -e $i "elasticache auto_version_update"
     origin=`redis_cli $i`
     echo $origin | jq '.[][]|select(.AutoMinorVersionUpgrade==true)|[.CacheClusterId]|@tsv'|awk -F\- '{print$3}'|tr a-z A-Z|uniq
@@ -114,11 +114,23 @@ function ri_coverage()
   End=`date +%Y-%m-%d -d '-1day'`
   local ser="${service[$1]}"
   local f='{ "Dimensions": { "Key": "SERVICE", "Values": ["'$ser'"] } }'
+  echo $f
   local tmpfile
   tmpfile=`mktemp`
   echo $f > $tmpfile
   echo -n "$1 coverage: "
   aws --profile 9913 ce get-reservation-coverage --time-period Start=$Start,End=$End --filter "file://$tmpfile"|jq -r '.Total.CoverageHours.CoverageHoursPercentage'
+  rm -f $tmpfile
+}
+
+function ri_coverage2()
+{
+  Start=`date +%Y-%m-%d -d '-2day'`
+  End=`date +%Y-%m-%d -d '-1day'`
+  local ser="${service[$1]}"
+  local f='{ "Dimensions": { "Key": "SERVICE", "Values": ["'$ser'"] } }'
+  echo -n "$1 coverage: "
+  aws --profile 9913 ce get-reservation-coverage --time-period Start=$Start,End=$End --filter "$f"|jq -r '.Total.CoverageHours.CoverageHoursPercentage'
   rm -f $tmpfile
 }
 
@@ -132,7 +144,7 @@ accounts() {
 }
 
 project_count() {
-  for i in $@;do
+  for i in "$@";do
     echo -e $i "project_sum"
     origin=`alb_cli $i`
     echo $origin | jq -r '.[][]|.LoadBalancerName'|awk -F- '{print$3}'|sort -u
@@ -142,7 +154,7 @@ project_count() {
 }
 
 alarms() {
-  for i in $@;do
+  for i in "$@";do
     echo -e $i "alarms"
     origin=`aws --profile $i cloudwatch describe-alarms --state-value ALARM`
     echo $origin | jq -r '.[][]|.AlarmName,.StateReason'
@@ -151,10 +163,10 @@ alarms() {
 }
 
 vpc() {
-  for i in {noprod,prod,infra,drms,709};do
+  for i in {noprod,prod,infra,drms,709,ss,aigcstg,sc-noprod,sc-prod};do
     echo -e $i "vpcs"
     origin=`aws --profile $i ec2 describe-vpcs`
-    echo $origin | jq -r  '.[][]|select(.Tags != null)|"\(.CidrBlock),\(.Tags|from_entries |.Name|ascii_upcase)"'|sort
+    echo $origin | jq -r  '.[][]|select(.Tags != null)|"\(.CidrBlock), \(.Tags|from_entries |.Name|ascii_upcase), \(.VpcId)"'|sort
     echo ""
   done
 }
@@ -168,40 +180,40 @@ sel='ec2 rds redis es all'
 select answer in $func;do
 case $answer in
   ec2_type)
-    ec2_sort_new $@;;
+    ec2_sort_new "$@";;
   ec2_ri)
     ec2_ri;;
   rds_type)
-    rds_sort $@;;
+    rds_sort "$@";;
   rds_ri)
     rds_ri;;
   rds_count_update)
-    rds_count_auto_version_update $@;;
+    rds_count_auto_version_update "$@";;
   redis_sort)
-    redis_sort $@;;
+    redis_sort "$@";;
   redis_ri)
     redis_ri;;
   redis_count_update)
-    redis_count_auto_version_update $@;;
+    redis_count_auto_version_update "$@";;
   count_update)
-    rds_count_auto_version_update $@
-    redis_count_auto_version_update $@;;
+    rds_count_auto_version_update "$@"
+    redis_count_auto_version_update "$@";;
   ri_coverage)
     select opt in $sel;do
     case $opt in
       ec2)
-        ri_coverage ec2;;
+        ri_coverage2 ec2;;
       rds)
-        ri_coverage rds;;
+        ri_coverage2 rds;;
       redis)
-        ri_coverage redis;;
+        ri_coverage2 redis;;
       es)
-        ri_coverage es;;
+        ri_coverage2 es;;
       all)
-        ri_coverage ec2
-        ri_coverage rds
-        ri_coverage redis
-        ri_coverage es;;
+        ri_coverage2 ec2
+        ri_coverage2 rds
+        ri_coverage2 redis
+        ri_coverage2 es;;
       none)
         break;;
     esac;done
@@ -209,16 +221,16 @@ case $answer in
   accounts)
     accounts;;
   project_count)
-    project_count $@;;
+    project_count "$@";;
   alarms)
-    alarms $@;;
+    alarms "$@";;
   vpc)
     vpc;;
   none)
     break;;
   *)
-    ec2_sort_new $@
-    rds_sort $@
-    redis_sort $@;;
+    ec2_sort_new "$@"
+    rds_sort "$@"
+    redis_sort "$@";;
 esac;done
   
