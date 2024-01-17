@@ -5,7 +5,7 @@ from dateutil.tz import tzutc
 import pandas as pd
 import openpyxl as opx
 
-# 返回所有账号的ec2 linux服务器的元信息
+# 返回所有账号的ec2服务器的元信息
 def ec2_info_new(profile):
   ec2_info, ec2_info_change = {}, {}
   for p in profile:
@@ -116,6 +116,7 @@ def ri_merge(data):
   # print(tmp)
   return tmp
 
+# 需要购买的RI统计
 def ri_buy(ri, *args):
   tmp = collections.defaultdict(int)
   for i in args:
@@ -123,6 +124,28 @@ def ri_buy(ri, *args):
   ri_tobuy = collections.defaultdict(int, {k: tmp[k] - ri[k] for k in tmp})
   # print('ri_tobuy:', ri_tobuy)
   return ri_tobuy
+
+# 查询redis offer id，购买RI
+def ri_buy_redis(ri):
+  session = boto3.Session(profile_name = '9913')
+  redis = session.client('elasticache')
+  for k,v in ri.items():
+    if v > 0:
+      response = redis.describe_reserved_cache_nodes_offerings(
+        CacheNodeType=k,
+        Duration='31536000',
+        ProductDescription='redis',
+        OfferingType='No Upfront',
+        )
+      offer_id = response['ReservedCacheNodesOfferings'][0]['ReservedCacheNodesOfferingId']
+      print('redis_offer_id: ', offer_id)
+      ri_buy = redis.purchase_reserved_cache_nodes_offering(
+        ReservedCacheNodesOfferingId=offer_id,
+        CacheNodeCount=v,
+        )
+      print(ri_buy)
+    else:
+      print('no need to buy redis ri!')
 
 
 
@@ -135,7 +158,7 @@ def rds_info_new(profile):
     rds = session.client('rds')
     response = rds.describe_db_instances()
     for i in response['DBInstances']:
-      if i["Engine"] != 'oracle-se2':
+      if i["Engine"] != 'oracle-se2' and i["Engine"] != 'docdb':
         rds_origin.append([i["Engine"], i["DBInstanceClass"], i["MultiAZ"]])
         rds_info[p] = rds_origin
   return rds_info

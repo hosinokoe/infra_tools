@@ -1,0 +1,8 @@
+uvicorn
+fastapi
+boto3
+Flask
+jq
+numpy
+pandas
+PyYAML

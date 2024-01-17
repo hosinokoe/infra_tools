@@ -3,7 +3,7 @@
 import configparser, argparse, datetime, inspect
 from termcolor import colored
 from base import ec2_info_new, instance_count_new, data_split, instance_split, instance_merge, to_excel_new
-from base import rds_info_new, ri_ec2, ri_merge, ri_buy, ri_rds, redis_info, ri_redis, opensearch_info, ri_es
+from base import rds_info_new, ri_ec2, ri_merge, ri_buy, ri_rds, redis_info, ri_redis, opensearch_info, ri_es, ri_buy_redis
 
 parser = argparse.ArgumentParser(description='Get RI purchase info!')
 parser.add_argument('-A', dest='func_name', metavar=('func_name'), help='ec2 or rds')
@@ -113,6 +113,10 @@ def redis_info_get():
       p(n, v)
   return redis_ri_buy
 
+def redis_ri_info():
+  data = redis_info_get()
+  ri_buy_redis(data)
+
 def opensearch_info_get():
   es_infos = opensearch_info(profile)
   es_data = instance_merge(es_infos)
@@ -147,6 +151,7 @@ def execute_fuction(func_name):
     'es': lambda: opensearch_info_get(),
     'all_np': lambda: [ec2_info_get(), rds_info_get(), redis_info_get(), opensearch_info_get()],
     'all': lambda: all_info_get(),
+    'redis_ri': lambda: redis_ri_info()
   }[func_name]()
 
 execute_fuction(func_name)
