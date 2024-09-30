@@ -1,23 +1,8 @@
-#/bin/bash
+#!/bin/bash
 #
 #
-
-# tmp=$1
 
 tmp=test
-j1=$(cat << EOS
-{
-  "Key": "SERVICE", "Values": [$ser]
-}
-EOS
-)
-
-json=$(cat << EOS
-{
-  "Dimensions": $j1
-}
-EOS
-)
 
 # 在测试文件夹根据日期顺序生成相应数量的测试文件
 create_file() {
@@ -38,23 +23,11 @@ declare -A service=(
   ['rds']='Amazon Relational Database Service'
   ['es']='Amazon OpenSearch Service'
 )
-#ser="${service[$1]}"
-#f='{ "Dimensions": { "Key": "SERVICE", "Values": ["'$ser'"] } }'
-#echo $f
-#j2=$(cat <<EOF
-#{
-#  "Dimensions": {
-#    "Key": "SERVICE", "Values": ["$ser"]
-#    }
-#  }
-#EOF
-#)
-#echo $j2
 
 function ri_coverage()
 {
-  Start=`date +%Y-%m-%d -d '-2day'`
-  End=`date +%Y-%m-%d -d '-1day'`
+  Start=$(date +%Y-%m-%d -d '-2day')
+  End=$(date +%Y-%m-%d -d '-1day')
   local ser="${service[$1]}"
 #  echo $ser
   local f='{ "Dimensions": { "Key": "SERVICE", "Values": ["'$ser'"] } }'
