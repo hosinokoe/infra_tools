@@ -1,0 +1,5 @@
+[user]
+name = hosinokoe
+email = hosinokoe@163.com
+[includeIf "hasconfig:remote.*.url:codecommit::*://**/**"]
+    path = ~/gitconfig/codecommit

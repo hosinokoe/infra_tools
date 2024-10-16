@@ -1,16 +1,16 @@
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 #export PATH="$PATH:$HOME/.rvm/bin"
-export ZSH=$HOME/.ohmyzsh
-#ZSH_THEME="robbyrussell"
-ZSH_THEME="agnoster"
+export ZSH=$HOME/.oh-my-zsh
+ZSH_THEME="robbyrussell"
+#ZSH_THEME="agnoster"
 plugins=(git z zsh-autosuggestions zsh-syntax-highlighting)
 source $ZSH/oh-my-zsh.sh
 HISTSIZE=1000
 SAVEHIST=1000
 HISTFILE=~/.zsh_history
 
-data_raw=`pass gossamer3/https:/fss.gecompany.com/fss|jq -r '.Data'`
+data_raw=`pass gossamer3/https:/fssfed.ge.com/fss|jq -r '.Data'`
 data=`echo $data_raw|base64 -d`
 user=`echo $data|jq -r '.Username'`
 pass=`echo $data|jq -r '.Secret'`
@@ -52,9 +52,9 @@ source ~/.zsh/func.sh
 # source <(kubectl completion zsh)
 # export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 
-# export NVM_DIR="$HOME/.nvm"
-# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # flutter
 # export PATH="$PATH:$HOME/tools/flutter/bin"
@@ -83,3 +83,6 @@ source ~/.zsh/func.sh
 # fpath=(${ASDF_DIR}/completions $fpath)
 # # initialise completions with ZSH's compinit
 # autoload -Uz compinit && compinit
+
+export TERRAGRUNT_PROVIDER_CACHE_DIR=$HOME/.terraform.d/plugin-cache
+#export TERRAGRUNT_PROVIDER_CACHE_DIR=$HOME/.terraform.d/plugins
