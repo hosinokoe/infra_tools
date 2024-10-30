@@ -20,3 +20,13 @@ awson() {
 	aws $1 sso login
 	~/.local/bin/yawsso -p $1
 }
+acg=~/project/infra_gehconfig/aws/config
+winuserp=$(powershell.exe -Command 'echo $env:userprofile')
+winuser=$(echo $winuserp|cut -d '\' -f2)
+winu=${winuser//$'\r'}
+acgs() {
+	ansible-vault decrypt $acg --vault-password-file=~/.ansible_secrets
+	cp -p $acg ~/.aws/config
+	cp -p $acg /mnt/c/Users/$winu/.aws/config 
+	cd ~/project/infra_gehconfig;git checkout aws/config
+}
