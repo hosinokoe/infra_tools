@@ -17,8 +17,16 @@ tfpsync() {
 	sh ~/project/infra_tools/shell/tfpsync.sh
 }
 awson() {
-	aws $1 sso login
-	~/.local/bin/yawsso -p $1
+  # 检查参数
+  if [ $# -eq 0 ]; then
+    echo "Usage: $0 arg1 arg2 arg3 ..."
+    exit 1
+  fi
+
+  for arg in "$@"; do
+    aws $arg sso login
+    ~/.local/bin/yawsso -p $arg
+  done
 }
 acg=~/project/infra_gehconfig/aws/config
 winuserp=$(powershell.exe -Command 'echo $env:userprofile')
