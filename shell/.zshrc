@@ -1,6 +1,6 @@
 
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-#export PATH="$PATH:$HOME/.rvm/bin"
+export PATH="$PATH:$HOME/.rvm/bin:$HOME/.local/bin"
 export ZSH=$HOME/.oh-my-zsh
 ZSH_THEME="robbyrussell"
 #ZSH_THEME="agnoster"
@@ -84,5 +84,5 @@ export NVM_DIR="$HOME/.nvm"
 # # initialise completions with ZSH's compinit
 # autoload -Uz compinit && compinit
 
-export TERRAGRUNT_PROVIDER_CACHE_DIR=$HOME/.terraform.d/plugin-cache
+#export TERRAGRUNT_PROVIDER_CACHE_DIR=$HOME/.terraform.d/plugin-cache
 #export TERRAGRUNT_PROVIDER_CACHE_DIR=$HOME/.terraform.d/plugins

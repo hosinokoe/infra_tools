@@ -28,7 +28,7 @@ awson() {
 
   for arg in "$@"; do
     aws $arg sso login
-    ~/.local/bin/yawsso -p $arg
+    yawsso -p $arg
   done
 }
 acg=~/project/infra_gehconfig/aws/config
@@ -47,4 +47,7 @@ gitsync() {
   cp -p $gitcs/{.git-credentials,.gitconfig} ~/
   mkdir -p ~/gitconfig;cp -p $gitcs/codecommit ~/gitconfig
   cd $gitcs;git checkout .git-credentials
+}
+zshsync() {
+  cp -rp ~/project/infra_tools/shell/.zsh* ~/
 }
