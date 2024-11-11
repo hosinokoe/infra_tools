@@ -29,6 +29,7 @@ awson() {
   done
 }
 acg=~/project/infra_gehconfig/aws/config
+gitcs=~/project/infra_gehconfig/gitconfig/
 winuserp=$(powershell.exe -Command 'echo $env:userprofile')
 winuser=$(echo $winuserp|cut -d '\' -f2)
 winu=${winuser//$'\r'}
@@ -37,4 +38,10 @@ acgs() {
 	cp -p $acg ~/.aws/config
 	cp -p $acg /mnt/c/Users/$winu/.aws/config 
 	cd ~/project/infra_gehconfig;git checkout aws/config
+}
+gitsync() {
+  ansible-vault decrypt $gitcs/.git-credentials --vault-password-file=~/.ansible_secrets
+  cp -p $gitcs/{.git-credentials,.gitconfig} ~/
+  mkdir -p ~/gitconfig;cp -p $gitcs/codecommit ~/gitconfig
+  cd $gitcs;git checkout .git-credentials
 }
