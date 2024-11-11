@@ -10,6 +10,9 @@ ssmpf() {
 pon() {
 	i=192.168.100.97:7890;export http_proxy=http://$i;export https_proxy=http://$i;export all_proxy=socks5://$i
 }
+p2on() {
+	i=192.168.100.97:10808;export http_proxy=http://$i;export https_proxy=http://$i;export all_proxy=socks5://$i
+}
 poff() {
 	unset i;unset http_proxy;unset https_proxy;unset all_proxy;
 }
