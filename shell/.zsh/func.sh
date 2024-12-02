@@ -45,6 +45,10 @@ acgs() {
 	cp -p $acg /mnt/c/Users/$winu/.aws/config 
 	cd ~/project/infra_gehconfig;git checkout aws/config
 }
+acgrs() {
+  cp -p ~/.aws/config $acg
+  ansible-vault encrypt $acg --vault-password-file=~/.ansible_secrets
+}
 gitsync() {
   ansible-vault decrypt $gitcs/.git-credentials --vault-password-file=~/.ansible_secrets
   cp -p $gitcs/{.git-credentials,.gitconfig} ~/
