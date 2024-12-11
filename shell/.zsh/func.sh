@@ -28,10 +28,10 @@ awson() {
 
   for arg in "$@"; do
     aws $arg sso login
-    yawsso -p $arg
     if [ $arg = "infra" ]; then
       yawsso -p infra:default
     fi
+    yawsso -p $arg
   done
 }
 acg=~/project/infra_gehconfig/aws/config
